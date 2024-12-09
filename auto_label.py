@@ -5,8 +5,14 @@ import argparse
 import requests
 import re
 import json
-from get_files_with_extension import get_files_with_extension
-from update_scan_type import update_scan_type
+
+# helper function
+def get_files_with_extension(directory, extension):
+    files = []
+    for filename in os.listdir(directory):
+        if os.path.isfile(os.path.join(directory, filename)) and filename.endswith(extension):
+            files.append(filename)
+    return files
 
 # parse input arguments
 parser = argparse.ArgumentParser(description="Auto Labeler")
