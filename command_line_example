@@ -1,0 +1,1 @@
+python auto_label.py --host $XNAT_HOST --user $XNAT_USER --pass $XNAT_PASS --dicomdir /dicom --project 

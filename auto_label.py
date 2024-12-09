@@ -1,13 +1,12 @@
 # requirements
 from pydicom import dcmread
 import os
-import pdb
 import argparse
 import requests
 import re
 import json
-import get_files_with_extension
-import update_scan_type
+from get_files_with_extension import get_files_with_extension
+from update_scan_type import update_scan_type
 
 # parse input arguments
 parser = argparse.ArgumentParser(description="Auto Labeler")
@@ -15,12 +14,23 @@ parser.add_argument("--dicom_dir", default="/input", help = "where the DICOMs ar
 parser.add_argument("--host", default="https://xnat2.bu.edu", help="BU XNAT host", required=True)
 parser.add_argument("--user", help="BU XNAT2 username", required=True)
 parser.add_argument("--password", help="BU XNAT2 Password", required=True)
+parser.add_argument("--project", default = "", required=True)
+parser.add_argument("--subject", default = "", required=True)
+parser.add_argument("--experiment", default = "", required=True)
+parser.add_argument("--scan", default = "1", required=True)
+parser.add_argument("--qcmapjson", default = "", required=True)
 
 args, unknown_args = parser.parse_known_args()
-dicom_dir = '/Users/kkurkela/Datasets/burcs/test002/test002_MR_1/2/DICOM'#args.dicom_dir
-host      = args.host
-user      = args.user
-password  = args.password
+print(args)
+dicom_dir  = args.dicom_dir
+host       = args.host
+user       = args.user
+password   = args.password
+qcmapstr   = args.qcmapjson
+project    = args.project
+subject    = args.subject
+experiment = args.experiment
+scan       = args.scan
 
 # find all files in the dicom_dir. Filter for 1.) files 2.) that end in ".dcm"
 dcm_files = get_files_with_extension(dicom_dir, 'dcm')
@@ -29,61 +39,57 @@ dcm_files = get_files_with_extension(dicom_dir, 'dcm')
 path_to_first_dcm = os.path.join(dicom_dir, dcm_files[0])
 first_dicom = dcmread(path_to_first_dcm, stop_before_pixels=True)
 
-## pull down the qc map for determining if this scan should be marked as a BOLD, ANAT, or DWI
+qcmap_decoded = json.loads(qcmapstr)
+filterRequirments = {}
 
-# Set up session
-sess = requests.Session()
-sess.verify = False
-sess.auth = (user, password)
+for scantype in qcmap_decoded:
+    
+    print()
+    print(scantype)
+    print()
 
-# Get site-level qc map
+    # does this dicom meet the criteria for being labeled as a SCANTYPE image?
+    passedFilter = []
+    for filt in qcmap_decoded[scantype]:
+        # key     = the DICOM field to check
+        # pattern = regular expression to determine if this is a match or not
+        key     = filt['key']
+        pattern = filt['re']
+        
+        print(f"DICOM Field: {key}")
+        print(f"Matching pattern: {pattern}")
+
+        # extract this DICOM entry
+        key_value = first_dicom.get(key)
+        
+        # does this DICOM entry match the regular expression?
+        passed = bool(re.search(pattern, key_value))
+        passedFilter.append(passed)
+    
+    # does this scan meet ALL of the filter requirements?
+    filterRequirments[scantype] = all(passedFilter)
+
 print()
-print("Get site-wide Quality Control map")
-r = sess.get(host + "/data/config/qc/qcmap", params={"contents": True})
-if r.ok:
-    qcmap = r.json()
-else:
-    print("Could not read site-wide QC map")
+print(filterRequirments)
+print()
 
-#qcmap = '{"BOLD":[{"key":"SequenceName","re":"ep*"},{"key":"PatientSex","re":"[^FM]?"}],"ANAT":[{"key":"SequenceName","re":"ep*"},{"key":"PatientSex","re":"[^FM]?"}]}'
-qcmap_decoded = json.loads(qcmap)
+numOfLabelsDiscovered = sum(filterRequirments.values())
+assert numOfLabelsDiscovered == 1, 'More than 1 Label Discovered'
 
-# does this dicom meet the criteria for being labeled as a BOLD image?
-passedFilter = []
-for filt in qcmap_decoded['BOLD']:
-    # key     = the DICOM field to check
-    # pattern = regular expression to determine if this is a match or not
-    key     = filt['key']
-    pattern = filt['re']
-    
-    # extract this DICOM entry
-    key_value = first_dicom.get(key)
-    
-    # does this DICOM entry match the regular expression?
-    passed = bool(re.search(pattern, key_value))
-    passedFilter.append(passed)
+# label this session as BOLD or ANAT or DWI using XNAT's REST API
+for scantype in filterRequirments:
 
-# label this session as BOLD or ANAT using XNAT's REST API
-if all(passedFilter):
-    # code for changing the "Type" field to "BOLD"
-    update_scan_type(host, project, subject, experiment, scan, scantype='BOLD')
+    # if this scan met all of the requirements for this scantype...
+    if filterRequirments[scantype]:
 
-# does this dicom meet the criteria for being labeled as a BOLD image?
-passedFilter = []
-for filt in qcmap_decoded['ANAT']:
-    # key     = the DICOM field to check
-    # pattern = regular expression to determine if this is a match or not
-    key     = filt['key']
-    pattern = filt['re']
-    
-    # extract this DICOM entry
-    key_value = first_dicom.get(key)
-    
-    # does this DICOM entry match the regular expression?
-    passed = bool(re.search(pattern, key_value))
-    passedFilter.append(passed)
+        # Set up session
+        sess = requests.Session()
+        sess.verify = False
+        sess.auth = (user, password)
 
-# label this session as BOLD or ANAT using XNAT's REST API
-if all(passedFilter):
-    # code for changing the "Type" field to "ANAT"
-    update_scan_type(host, project, subject, experiment, scan, scantype='ANAT')
+        # code for changing the "Type" field to "SCANTYPE"
+        print()
+        print(f"Changing the Scan Type to {scantype}")
+        r = sess.put(host + f"/data/projects/{project}/subjects/{subject}/experiments/{experiment}/scans/{scan}", params={"xnat:mrScanData/type":scantype})
+        print(r.ok)
+        print()

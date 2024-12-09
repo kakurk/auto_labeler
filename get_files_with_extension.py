@@ -1,3 +1,5 @@
+import os
+
 def get_files_with_extension(directory, extension):
     files = []
     for filename in os.listdir(directory):
