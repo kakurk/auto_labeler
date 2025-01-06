@@ -1,0 +1,22 @@
+{
+    "BOLD": [
+        {
+            "key": "SequenceName",
+            "re": "ep*"
+        },
+        {
+            "key": "PatientSex",
+            "re": "[^FM]?"
+        }
+    ],
+    "ANAT": [
+        {
+            "key": "SequenceName",
+            "re": "MPRAGE*"
+        },
+        {
+            "key": "PatientSex",
+            "re": "[^FM]?"
+        }
+    ]
+}

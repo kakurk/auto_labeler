@@ -5,6 +5,7 @@ import argparse
 import requests
 import re
 import json
+import pdb
 
 # helper function
 def get_files_with_extension(directory, extension):
@@ -32,20 +33,23 @@ dicom_dir  = args.dicom_dir
 host       = args.host
 user       = args.user
 password   = args.password
-qcmapstr   = args.qcmapjson
 project    = args.project
 subject    = args.subject
 experiment = args.experiment
 scan       = args.scan
+qcmapjson  = args.qcmapjson
 
 # find all files in the dicom_dir. Filter for 1.) files 2.) that end in ".dcm"
 dcm_files = get_files_with_extension(dicom_dir, 'dcm')
 
-# look at the first dicom images. Read in only the header information minus the image data
+# look at the first dicom. Read in only the header information minus the image data
 path_to_first_dcm = os.path.join(dicom_dir, dcm_files[0])
 first_dicom = dcmread(path_to_first_dcm, stop_before_pixels=True)
 
-qcmap_decoded = json.loads(qcmapstr)
+# load the qcmap from provided text file
+f = open(qcmapjson, 'r')
+qcmap_decoded = json.load(f)
+
 filterRequirments = {}
 
 for scantype in qcmap_decoded:
@@ -79,8 +83,10 @@ print()
 print(filterRequirments)
 print()
 
+pdb.set_trace()
+
 numOfLabelsDiscovered = sum(filterRequirments.values())
-assert numOfLabelsDiscovered == 1, 'More than 1 Label Discovered'
+assert numOfLabelsDiscovered <= 1, 'More than 1 Label Discovered'
 
 # label this session as BOLD or ANAT or DWI using XNAT's REST API
 for scantype in filterRequirments:
