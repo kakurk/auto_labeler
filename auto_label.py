@@ -7,6 +7,9 @@ import re
 import json
 import pdb
 
+# suppress package warnings
+requests.packages.urllib3.disable_warnings() 
+
 # helper function
 def get_files_with_extension(directory, extension):
     files = []
@@ -25,10 +28,8 @@ parser.add_argument("--project", default = "", required=True)
 parser.add_argument("--subject", default = "", required=True)
 parser.add_argument("--experiment", default = "", required=True)
 parser.add_argument("--scan", default = "1", required=True)
-parser.add_argument("--qcmapjson", default = "", required=True)
 
 args, unknown_args = parser.parse_known_args()
-print(args)
 dicom_dir  = args.dicom_dir
 host       = args.host
 user       = args.user
@@ -37,7 +38,18 @@ project    = args.project
 subject    = args.subject
 experiment = args.experiment
 scan       = args.scan
-qcmapjson  = args.qcmapjson
+
+# Set up a session
+sess = requests.Session()
+sess.verify = False
+sess.auth = (user, password)
+
+# load the XNAT REST API Site-wide Config
+r = sess.get(host + "/data/config/autolabel/autolabelmap", params={"contents": True})
+if r.ok:
+    qcmap_decoded = r.json()
+else:
+    print("Could not read site-wide BIDS map")
 
 # find all files in the dicom_dir. Filter for 1.) files 2.) that end in ".dcm"
 dcm_files = get_files_with_extension(dicom_dir, 'dcm')
@@ -45,10 +57,6 @@ dcm_files = get_files_with_extension(dicom_dir, 'dcm')
 # look at the first dicom. Read in only the header information minus the image data
 path_to_first_dcm = os.path.join(dicom_dir, dcm_files[0])
 first_dicom = dcmread(path_to_first_dcm, stop_before_pixels=True)
-
-# load the qcmap from provided text file
-f = open(qcmapjson, 'r')
-qcmap_decoded = json.load(f)
 
 filterRequirments = {}
 
@@ -83,8 +91,6 @@ print()
 print(filterRequirments)
 print()
 
-pdb.set_trace()
-
 numOfLabelsDiscovered = sum(filterRequirments.values())
 assert numOfLabelsDiscovered <= 1, 'More than 1 Label Discovered'
 
@@ -94,14 +100,12 @@ for scantype in filterRequirments:
     # if this scan met all of the requirements for this scantype...
     if filterRequirments[scantype]:
 
-        # Set up session
-        sess = requests.Session()
-        sess.verify = False
-        sess.auth = (user, password)
-
         # code for changing the "Type" field to "SCANTYPE"
         print()
         print(f"Changing the Scan Type to {scantype}")
         r = sess.put(host + f"/data/projects/{project}/subjects/{subject}/experiments/{experiment}/scans/{scan}", params={"xnat:mrScanData/type":scantype})
         print(r.ok)
         print()
+
+# close the 
+sess.close()
