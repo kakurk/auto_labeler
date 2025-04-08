@@ -1,3 +1,5 @@
+#!/home/kkurkela/auto_labeler/venvs/autolabel/bin/python
+
 # requirements
 from pydicom import dcmread
 import os
@@ -30,7 +32,7 @@ parser.add_argument("--experiment", default = "", required=True)
 parser.add_argument("--scan", default = "1", required=True)
 
 args, unknown_args = parser.parse_known_args()
-dicom_dir  = args.dicom_dir
+dicom_dir  = os.path.join(args.dicom_dir, 'DICOM')
 host       = args.host
 user       = args.user
 password   = args.password
@@ -44,12 +46,44 @@ sess = requests.Session()
 sess.verify = False
 sess.auth = (user, password)
 
-# load the XNAT REST API Site-wide Config
-r = sess.get(host + "/data/config/autolabel/autolabelmap", params={"contents": True})
-if r.ok:
-    qcmap_decoded = r.json()
-else:
-    print("Could not read site-wide BIDS map")
+def is_anatomical_scan(ds):
+    
+    # Step 1: Exclude non-ANAT series
+    series_desc = getattr(ds, "SeriesDescription", [])
+    exclude_keywords = ["func", "bold", "fmap", "dti", "dwi", "localizer", "scout"]
+    if any(kw in series_desc for kw in exclude_keywords):
+        return False
+    
+    # Step 2: Check ImageType
+    image_type = getattr(ds, "ImageType", [])
+    if any(it in image_type for it in ["FUNCTIONAL", "DIFFUSION", "LOCALIZER"]):
+        return False
+    
+    # Step 3: Check sequence (T1/T2/FLAIR)
+    scanning_seq = getattr(ds, "ScanningSequence", "")
+    if scanning_seq in ["EP"]:  # Exclude EPI (fMRI/DWI)
+        return False
+    
+    # Step 4: Validate resolution
+    slice_thickness = getattr(ds, "SliceThickness", 10.0)  # Default to 10mm if missing
+    rows = getattr(ds, "Rows", 0)
+    cols = getattr(ds, "Columns", 0)
+    if slice_thickness > 3.0 or rows < 256 or cols < 256:
+        return False
+    
+    # Step 5: Validate TR/TE
+    tr = getattr(ds, "RepetitionTime", 0)
+    te = getattr(ds, "EchoTime", 0)
+    if not (400 <= tr <= 6000 and 2 <= te <= 120):  # Broad ANAT range
+        return False
+    
+    # Step 6: Check EchoPlanarPulseSequence and (0020,0105) Number of Temporal Positions
+    
+
+
+    return True
+
+## Define an is_functional_scan function
 
 # find all files in the dicom_dir. Filter for 1.) files 2.) that end in ".dcm"
 dcm_files = get_files_with_extension(dicom_dir, 'dcm')
@@ -57,55 +91,41 @@ dcm_files = get_files_with_extension(dicom_dir, 'dcm')
 # look at the first dicom. Read in only the header information minus the image data
 path_to_first_dcm = os.path.join(dicom_dir, dcm_files[0])
 first_dicom = dcmread(path_to_first_dcm, stop_before_pixels=True)
+series_description = first_dicom.get('SeriesDescription')
 
-filterRequirments = {}
+if series_description == 'T2SPACE_1mm_256_224_p2_vNav':
+    pdb.set_trace()
 
-for scantype in qcmap_decoded:
-    
-    print()
-    print(scantype)
-    print()
-
-    # does this dicom meet the criteria for being labeled as a SCANTYPE image?
-    passedFilter = []
-    for filt in qcmap_decoded[scantype]:
-        # key     = the DICOM field to check
-        # pattern = regular expression to determine if this is a match or not
-        key     = filt['key']
-        pattern = filt['re']
-        
-        print(f"DICOM Field: {key}")
-        print(f"Matching pattern: {pattern}")
-
-        # extract this DICOM entry
-        key_value = first_dicom.get(key)
-        
-        # does this DICOM entry match the regular expression?
-        passed = bool(re.search(pattern, key_value))
-        passedFilter.append(passed)
-    
-    # does this scan meet ALL of the filter requirements?
-    filterRequirments[scantype] = all(passedFilter)
-
-print()
-print(filterRequirments)
-print()
-
-numOfLabelsDiscovered = sum(filterRequirments.values())
-assert numOfLabelsDiscovered <= 1, 'More than 1 Label Discovered'
-
-# label this session as BOLD or ANAT or DWI using XNAT's REST API
-for scantype in filterRequirments:
-
-    # if this scan met all of the requirements for this scantype...
-    if filterRequirments[scantype]:
-
-        # code for changing the "Type" field to "SCANTYPE"
+## Test 1 -- Is this an MR scan? If not, we cannot QA it.
+if ('0008', '0060') in first_dicom:
+    if first_dicom.get(('0008','0060')).value != 'MR':
         print()
-        print(f"Changing the Scan Type to {scantype}")
-        r = sess.put(host + f"/data/projects/{project}/subjects/{subject}/experiments/{experiment}/scans/{scan}", params={"xnat:mrScanData/type":scantype})
-        print(r.ok)
-        print()
+        print(f"Series: {series_description}")
+        print('Is NOT MR')
+        quit()
 
-# close the 
-sess.close()
+## Test 2 -- Is this an brain image? If not, we cannot QA it.
+if ('0018', '0015') in first_dicom:
+    if first_dicom.get(('0018','0015')).value != 'BRAIN':
+        print()
+        print(f"Series: {series_description}")
+        print('Is NOT of the Brain')
+        quit()
+
+## Test 3 -- Is this an anatomical scan?
+if is_anatomical_scan(first_dicom):
+    print()
+    print(f"Series: {series_description}")
+    print('Is ANAT')
+    quit()
+
+## Test 4 -- Is this a functional scan?
+#if is_bold_scan(path_to_first_dcm):
+#    print(f"Series: {series_description}")
+#    print('Is BOLD')
+#    quit()
+
+# Unidenfitied scan
+print()
+print(f"Series: {series_description}")
+print('Is unidentified')
