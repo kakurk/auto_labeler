@@ -1,1 +1,1 @@
-python auto_label.py --user $XNAT_USER --host $XNAT_HOST --password $XNAT_PASS --dicom_dir /in --project #PROJ_ID# --subject #SUBJ_ID# --experiment #SESS_ID# --scan #SCAN_ID# --qcmap '{"BOLD":[{"key":"SequenceName","re":"ep*"},{"key":"PatientSex","re":"[^FM]?"}],"ANAT":[{"key":"SequenceName","re":"MPRAGE*"},{"key":"PatientSex","re":"[^FM]?"}]}'
+python auto_label.py --user $XNAT_USER --host $XNAT_HOST --password $XNAT_PASS --dicom_dir /in --project #PROJ_ID# --subject #SUBJ_ID# --experiment #SESS_ID# --scan #SCAN_ID#
