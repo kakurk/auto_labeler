@@ -3,13 +3,9 @@
 from pydicom import dcmread
 import os
 import argparse
-import requests
 from glob import glob
 from xnatqa.tag import tag_scans
 from xnatqa.launch import launch
-
-# suppress package warnings
-requests.packages.urllib3.disable_warnings()
 
 # parse input arguments
 parser = argparse.ArgumentParser(description="Auto Labeler")
