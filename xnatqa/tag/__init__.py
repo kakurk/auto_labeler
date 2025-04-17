@@ -4,14 +4,6 @@ from glob import glob
 import re
 import xnatqa
 
-def update_tagger_yaml(modality, series_description, image_type, tag):
-    # tag scan using xnattagger
-
-    # write a xnattagger configuration file for this scan
-    data = {modality: [{'series_description': series_description, 'image_type': image_type, 'tag': tag}]}
-    with open('tagger.yaml', 'a') as file:
-        yaml.dump(data, file)
-
 def extract_bids_suffix(bids_string):
         # Extract the BIDS suffix from a BIDS formatted string
         search_pattern = "([^_]+)$"
