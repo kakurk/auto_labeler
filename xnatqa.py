@@ -21,14 +21,13 @@ dicom_dir  = os.path.join(args.dicom_dir, 'SCANS')
 host       = args.host
 user       = args.user
 password   = args.password
-project    = args.project
-subject    = args.subject
 experiment = args.experiment
-scan       = args.scan
 
-# run xant authentication
-#os.system(f'xnat_auth --alias xnat --url {host} --username {user} --password {password}')
+# run xnat authentication for this container. writes an ~/.xnat_auth file to the home directory
+os.system(f'xnat_auth --alias xnat --url {host} --username {user} --password {password}')
 
+# tag all scans in this session
 tag_scans(dicom_dir, experiment)
 
-launch()
+# launch all QA jobs for this session
+launch(experiment)
