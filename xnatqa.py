@@ -1,5 +1,3 @@
-#!/home/kkurkela/auto_labeler/venvs/autolabel/bin/python
-
 from pydicom import dcmread
 import os
 import argparse
