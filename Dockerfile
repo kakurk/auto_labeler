@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y unzip curl
 WORKDIR /app
 
 # pip install the xnatqa package contained in this repository
-RUN pip install xnatqa==0.0.7
+RUN pip install xnatqa==0.0.8
 
 # install the latest version of dcm2niix
 ARG D2N_PREFIX="/sw/apps/dcm2niix"
