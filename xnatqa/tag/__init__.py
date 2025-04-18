@@ -22,7 +22,7 @@ def generate_tagger_config(dicom_dir):
     os.system(f"dcm2niix -s y -a y -b o -o $PWD -f 'output_%s_%d' -w 0 -m 1 -i y {dicom_dir} &>>log.txt")
 
     # idenfity all of these text files
-    jsonFiles = glob('output*.json')
+    jsonFiles = glob('./output*.json')
 
     # sort the found files so that they are in decensing order by series_number
     # this is probably unnecssary
