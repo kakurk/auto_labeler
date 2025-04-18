@@ -1,1 +1,1 @@
-docker run --rm -v /data/xnat/archive/burcs/arc001/test001_MR_3/:/dicomdir -v /usr/local/sge/bin/:/sge kkurkela92/xnatqa --dicom_dir /dicomdir --host https://xnat2.bu.edu --user kkurkela --password $PASS --experiment test001_MR_3
+docker run --env-file .auth --rm -v /data/xnat/archive/burcs/arc001/test001_MR_3/:/dicomdir -v /usr/local/sge/bin/:/sge kkurkela92/xnatqa --dicom_dir /dicomdir --experiment test001_MR_3

@@ -3,3 +3,4 @@ pass.txt
 venvs/
 dist/
 xnatqa.egg-info/
+.auth
