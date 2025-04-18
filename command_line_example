@@ -1,1 +1,1 @@
-python auto_label.py --user XNAT_USER --host XNAT_HOST --password XNAT_PASS --dicom_dir /dcmdir --project PROJ_ID --subject SUBJ_ID --experiment SESS_ID --scan SCAN_ID
+xnatqa.py --user XNAT_USER --host XNAT_HOST --password XNAT_PASS --dicom_dir /dcmdir --experiment SESS_ID

@@ -1,4 +1,5 @@
 __pycache__/
 pass.txt
-venvs/*
-*/__pycahce__/*
+venvs/
+dist/
+xnatqa.egg-info/

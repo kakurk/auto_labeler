@@ -1,0 +1,32 @@
+[project]
+name = "xnatqa"
+version = "0.0.7"
+authors = [
+  { name="Kyle Kurkela", email="kkurkela@bu.edu" },
+]
+description = "A workflow for automatically labeling and running QA on MRI scans within XNAT"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+dependencies = [
+  "xnattagger",
+  "yaxil",
+  "pyyaml",
+  "glob2"
+]
+
+[project.scripts]
+xnatqa = "xnatqa.xnatqa:main"
+
+[project.urls]
+Homepage = "https://github.com/kakurk/auto_labeler"
+Issues = "https://github.com/kakurk/auto_labeler/issues"
+
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
