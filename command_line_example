@@ -1,1 +1,22 @@
-docker run --env-file .auth --rm -v /data/xnat/archive/burcs/arc001/test001_MR_3/:/dicomdir -v /usr/local/sge/bin/:/sge kkurkela92/xnatqa --dicom_dir /dicomdir --experiment test001_MR_3
+# command line example
+> docker run --env-file .auth --rm -v /data/xnat/archive/burcs/arc001/test001_MR_3/:/dicomdir kkurkela92/xnatqa --dicom_dir /dicomdir --experiment test001_MR_3
+
+# where .auth looks something like this:
+> cat .auth
+> XNAT_HOST=https://xnat2.bu.edu
+> XNAT_USER=kkurkela
+> XNAT_PASS=PassWord!@#
+
+# workflow for updating the pypi repo:
+#   update the pyproject.toml with the latest version number
+nano pyproject.toml
+#   this line builds the python project in the ./dist directory
+python -m build
+#   this line uploads the build from the previous line to the pypi repository
+python -m twine upload --repository pypi dist/xnatqa-0.0.11*
+
+# workflow for building the docker container:
+#  docker build = the command for building docker containers. See docker documentation.
+#  --tag = the name of the container, including where it shoud live. The first part of the tag is the Dockerhub user who owns the container. The second part if the name of the container.
+#  -f = the Dockerfile text file container docker build commands. Here we use a multistage docker build.
+docker build --tag kkurkela92/xnatqa -f Dockerfile.multistage .
