@@ -1,6 +1,6 @@
 [project]
 name = "xnatqa"
-version = "0.0.15"
+version = "0.0.16"
 authors = [
   { name="Kyle Kurkela", email="kkurkela@bu.edu" },
 ]
@@ -22,6 +22,7 @@ dependencies = [
 
 [project.scripts]
 xnatqa = "xnatqa.xnatqa:main"
+launch = "xnatqa.launch:main"
 
 [project.urls]
 Homepage = "https://github.com/kakurk/auto_labeler"

@@ -136,8 +136,11 @@ for dt in "${insert_date[@]}"; do
         echo ""
         xnatqa --dicom_dir $path_to_scans --experiment ${label[$c]}
 
-        # launch jobs on the SCC for the QA reports
-
+        # launch jobs on the SCC for the QA reports.
+        # launches 1 job for each tagged scan in this session.
+        # BOLDQC jobs take < 1hr
+        # ANATQC jobs take ~3-4 hrs
+        launch --experiment ${label[$c]}
 
     else
         echo ""
