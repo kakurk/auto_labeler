@@ -20,11 +20,12 @@ authenticate() {
 # The current timestamp
 current_timestamp=$(date)
 
-# Function to get todays date in a format the is Kosher with XNAT's API
+# Function to get today's date in a format the is Kosher with XNAT's API
 todays_date() {
     date -u +"%m/%d/%Y"
 }
 
+# Function to get tomorrow's date in a format the is Kosher with XNAT's API
 tomorrows_date() {
    date -d "tomorrow" +%m/%d/%Y
 }
@@ -46,9 +47,9 @@ get_todays_sessions() {
     local api_url="$XNAT_HOST/data/experiments"
     if [ -n "$PROJECT_ID" ]; then
         api_url="$api_url?project=$PROJECT_ID"
-        api_url="$api_url&insert_date=$today-$tomorrow"
+        api_url="$api_url&columns=project,insert_date,label&insert_date=$today-$tomorrow"
     else
-        api_url="$api_url?insert_date=$today-$tomorrow"
+        api_url="$api_url?columns=project,insert_date,label&insert_date=$today-$tomorrow"
     fi
     
     # Get the sessions
@@ -96,6 +97,7 @@ TODAYS_SESSIONS=$(get_todays_sessions "$JSESSION")
 mapfile -t ID < <(jq -r '.ResultSet.Result[].ID' <<< $TODAYS_SESSIONS)
 mapfile -t label < <(jq -r '.ResultSet.Result[].label' <<< $TODAYS_SESSIONS)
 mapfile -t insert_date < <(jq -r '.ResultSet.Result[].insert_date' <<< $TODAYS_SESSIONS)
+mapfile -t projects < <(jq -r '.ResultSet.Result[].project' <<< $TODAYS_SESSIONS)
 
 # Have any of these sessions been inserted in the intervening time period?
 start_datetime=$LAST_CHECKED
@@ -123,6 +125,19 @@ for dt in "${insert_date[@]}"; do
         echo ""
 
         # code for labeling and launching
+
+        # In order to label, I need the full path to where the scans are located
+        # example: /data/xnat/archive/burcs/arc001/test001_MR_1/SCANS/
+        path_to_scans=/data/xnat/archive/${projects[$c]}/arc001/${label[$c]}/SCANS/
+        
+        # run the labeling process
+        echo ""
+        echo "Tagging scans for Session ${label[$c]}..."
+        echo ""
+        xnatqa --dicom_dir $path_to_scans --experiment ${label[$c]}
+
+        # launch jobs on the SCC for the QA reports
+
 
     else
         echo ""
