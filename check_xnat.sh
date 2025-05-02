@@ -5,8 +5,8 @@
 
 # Configuration
 XNAT_HOST="https://xnat2.bu.edu"
-XNAT_USER="kkurkela"
-XNAT_PASS="Q8ZTq!rC!w!4xkFBU24"
+XNAT_USER='kkurkela'
+XNAT_PASS='Q8ZTq!rC!w!4xkFBU24'
 PROJECT_ID=""  # Leave empty to check all accessible projects
 CHECK_INTERVAL=3600  # Time between checks in seconds (default: 1 hour)
 STATE_FILE="$HOME/.xnat_last_checked"  # File to store last check timestamp
@@ -17,11 +17,16 @@ authenticate() {
     echo "$SESSION_ID"
 }
 
-# Function to get todays date in a format the is Kosher with XNAT's API
+# The current timestamp
 current_timestamp=$(date)
 
+# Function to get todays date in a format the is Kosher with XNAT's API
 todays_date() {
     date -u +"%m/%d/%Y"
+}
+
+tomorrows_date() {
+   date -d "tomorrow" +%m/%d/%Y
 }
 
 # Function to check if response is HTML
@@ -30,28 +35,30 @@ is_html_response() {
     [[ "$content" == *"<html"* ]] || [[ "$content" == *"<!DOCTYPE"* ]] || [[ "$content" == *"<head"* ]]
 }
 
+# function that returns all sessions inserted today
 get_todays_sessions() {
 
     local jsession="$1"
     local today=$(todays_date)
+    local tomorrow=$(tomorrows_date)
     
-    # Build the API URL
+    # Build the API URL, appending the project id and todays date as necessary
     local api_url="$XNAT_HOST/data/experiments"
     if [ -n "$PROJECT_ID" ]; then
         api_url="$api_url?project=$PROJECT_ID"
-        api_url="$api_url&date=$today"
+        api_url="$api_url&insert_date=$today-$tomorrow"
     else
-        api_url="$api_url?date=$today"
+        api_url="$api_url?insert_date=$today-$tomorrow"
     fi
     
     # Get the sessions
     RAW_RESPONSE=$(curl -s -k -b "JSESSIONID=$jsession" -H "Accept: application/json" "$api_url")
  
-    # Check if response is HTML
+    # Check if response is HTML. This indicates some sort of error has occured. If its not html, return the raw json response
     if is_html_response $RAW_RESPONSE; then
         echo "ERROR: Received HTML response instead of JSON data" >&2
         echo "Possible authentication failure or invalid endpoint" >&2
-        echo "Response starts with:" >&2
+        echo "Response:" >&2
         echo $RAW_RESPONSE
         return 1
     else
@@ -60,7 +67,9 @@ get_todays_sessions() {
 }
 
 # Main script
-echo "XNAT Session Monitor - Started at $(current_timestamp)"
+echo ""
+echo "XNAT Session Monitor - Started at $current_timestamp"
+echo ""
 
 # Get or create last checked timestamp
 if [ -f "$STATE_FILE" ]; then
@@ -79,7 +88,8 @@ if [ -z "$JSESSION" ]; then
 fi
 
 # Get todays sessions
-echo "Checking for todays sessions..."
+echo ""
+echo "Retrieving today's sessions..."
 TODAYS_SESSIONS=$(get_todays_sessions "$JSESSION")
 
 # extract relevant data as bash arrays
@@ -88,48 +98,51 @@ mapfile -t label < <(jq -r '.ResultSet.Result[].label' <<< $TODAYS_SESSIONS)
 mapfile -t insert_date < <(jq -r '.ResultSet.Result[].insert_date' <<< $TODAYS_SESSIONS)
 
 # Have any of these sessions been inserted in the intervening time period?
-echo $LAST_CHECKED
 start_datetime=$LAST_CHECKED
 end_datetime=$current_timestamp
 
 # Convert start and end to seconds since epoch for comparison
 start_sec=$(date -d "$start_datetime" +%s)
 end_sec=$(date -d "$end_datetime" +%s)
-echo $start_sec
 
-
-echo "Checking which datetimes fall between $start_datetime and $end_datetime"
+echo ""
+echo "Checking if sessions were inserted between $start_datetime and $end_datetime"
 echo "--------------------------------------------------"
 
 # Loop through the array and check each datetime
+c=0
 for dt in "${insert_date[@]}"; do
 
     # Convert current datetime to seconds since epoch
     dt_sec=$(date -d "$dt" +%s)
     
-    # Perform the comparison
+    # Determine if this insert time is between START and END
     if (( dt_sec >= start_sec && dt_sec <= end_sec )); then
-        echo "$dt is WITHIN the range"
+        echo ""
+        echo "Session: ${label[$c]} inserted at $dt is WITHIN the range"
+        echo ""
+
+        # code for labeling and launching
+
     else
-        echo "$dt is OUTSIDE the range"
+        echo ""
+        echo "Session ${label[$c]} inserted at $dt is OUTSIDE the range"
+        echo ""
     fi
+
+    # advance the counter
+    c=$((c + 1))
+
 done
 
-# if [ -n "$NEW_SESSIONS" ]; then
-#     echo "New sessions found:"
-#     echo "$NEW_SESSIONS" | while read -r line; do
-#         echo "  - $line"
-#     done
-# else
-#     echo "No new sessions found."
-# fi
-
 # Update last checked timestamp
-NEW_TIMESTAMP=$(todays_date)
+NEW_TIMESTAMP=$(date)
 echo "$NEW_TIMESTAMP" > "$STATE_FILE"
 echo "Updated last checked timestamp to: $NEW_TIMESTAMP"
+echo ""
 
 # Logout
 curl -s -k -b "JSESSIONID=$JSESSION" "$XNAT_HOST/data/JSESSION" -X DELETE > /dev/null
 
+# confirm check complete
 echo "Check complete. Next check in $CHECK_INTERVAL seconds."
