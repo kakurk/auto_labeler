@@ -1,7 +1,6 @@
 import os
 import argparse
 from xnatqa.tag import tag_scans
-from xnatqa.launch import launch
 
 def main():
 
@@ -20,9 +19,6 @@ def main():
 
     # tag all scans in this session
     tag_scans(dicom_dir, experiment)
-
-    # launch all QA jobs for this session
-    launch(experiment)
 
 if __name__ == "__main__":
     main()
