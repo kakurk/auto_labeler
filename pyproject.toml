@@ -1,10 +1,10 @@
 [project]
 name = "xnatqa"
-version = "0.0.10"
+version = "0.0.15"
 authors = [
   { name="Kyle Kurkela", email="kkurkela@bu.edu" },
 ]
-description = "A workflow for automatically labeling and running QA on MRI scans within XNAT"
+description = "A workflow for automatically tagging MRI scans within XNAT"
 readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [
@@ -14,7 +14,7 @@ classifiers = [
 license = "MIT"
 license-files = ["LICEN[CS]E*"]
 dependencies = [
-  "xnattagger",
+  "xnattagger-kkurk",
   "yaxil",
   "pyyaml",
   "glob2"

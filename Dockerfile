@@ -20,10 +20,6 @@ RUN mkdir -p $D2N_PREFIX && \
 # adding dcm2niix installation to path
 ENV PATH="${D2N_PREFIX}:${PATH}"
 
-# create a directoy in the root called "sge" and add it to the searchpath
-RUN mkdir /sge
-ENV PATH="/sge:${PATH}"
-
 # make the xnatqa script the entrypoint
 ENTRYPOINT ["xnatqa"]
 
