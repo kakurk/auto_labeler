@@ -5,8 +5,6 @@
 
 # Configuration
 XNAT_HOST="https://xnat2.bu.edu"
-XNAT_USER='kkurkela'
-XNAT_PASS='Q8ZTq!rC!w!4xkFBU24'
 PROJECT_ID=""  # Leave empty to check all accessible projects
 CHECK_INTERVAL=3600  # Time between checks in seconds (default: 1 hour)
 STATE_FILE="$HOME/.xnat_last_checked"  # File to store last check timestamp
