@@ -8,6 +8,8 @@
 > XNAT_PASS=PassWord!@#
 
 # workflow for updating the pypi repo:
+#   source the xnatqa virtual env:
+source /home/kkurkela/venvs/xnatqa/bin/activate
 #   update the pyproject.toml with the latest version number
 nano pyproject.toml
 #   this line builds the python project in the ./dist directory
@@ -20,3 +22,9 @@ python -m twine upload --repository pypi dist/xnatqa-0.0.11*
 #  --tag = the name of the container, including where it shoud live. The first part of the tag is the Dockerhub user who owns the container. The second part if the name of the container.
 #  -f = the Dockerfile text file container docker build commands. Here we use a multistage docker build.
 docker build --tag kkurkela92/xnatqa -f Dockerfile.multistage .
+
+# workflow for updating the xnat virtual env:
+#   make sure the xnatqa virtual enviornment is active
+source /home/kkurkela/venvs/xnatqa/bin/activate
+#   update the xnatqa version using pip:
+pip install xnatqa --upgrade
