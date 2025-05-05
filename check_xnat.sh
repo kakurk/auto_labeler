@@ -121,16 +121,27 @@ for dt in "${insert_date[@]}"; do
     
     # Determine if this insert time is between START and END
     if (( dt_sec >= start_sec && dt_sec <= end_sec )); then
+
         echo ""
         echo "Session: ${label[$c]} inserted at $dt is WITHIN the range"
         echo ""
 
         # code for labeling and launching
 
-        # In order to label, I need the full path to where the scans are located
-        # example: /data/xnat/archive/burcs/arc001/test001_MR_1/SCANS/
+        # In order to label, I need the full path to where the scans are store on this machine
+        # XNAT archives data in the following directory structure:
+        # structure: /data/xnat/archive/%PROJECT%/arc001/%SESSION%/SCANS/
+        # where %PROJECT% and %SESSION% are the project and session labels respectively
+        # for example: /data/xnat/archive/burcs/arc001/test001_MR_1/SCANS/
         path_to_scans=/data/xnat/archive/${projects[$c]}/arc001/${label[$c]}/SCANS/
         
+        # make sure "path_to_scans" exists. Throw an error if it does not.
+        if [! -d $path_to_scans ]; then
+            echo "Scans directory does not exist for project: ${projects[$c]} session: ${label[$c]}" >&2
+            echo $path_to_scans >&2
+            return 1
+        fi
+
         # run the labeling process
         echo ""
         echo "Tagging scans for Session ${label[$c]}..."
