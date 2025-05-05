@@ -11,7 +11,7 @@ def extract_bids_suffix(bids_string):
         bids_suffix = match.group(1)
         return bids_suffix
 
-def generate_tagger_config(dicom_dir):
+def generate_tagger_config(dicom_dir, working_dir):
 
     # This calls the latest version of dcm2niix WITHOUT creating the *.nii.gz files, only the BIDS metadata *.json sidecars.
     # dcm2niix automatically skips scans that it has identified as being non-BIDS (i.e., localizers, scouts)
@@ -19,10 +19,10 @@ def generate_tagger_config(dicom_dir):
     # This seems to work well most of the time, with the odd hicups. I include manual code here to catch the "hicups".
 
     # call to dcm2niix. generates a bunch of *.json text files in the current working directory.
-    os.system(f"dcm2niix -s y -a y -b o -o $PWD -f 'output_%s_%d' -w 0 -m 1 -i y {dicom_dir} &>>log.txt")
+    os.system(f"dcm2niix -s y -a y -b o -o {working_dir} -f 'output_%s_%d' -w 0 -m 1 -i y {dicom_dir} &>>{working_dir}/log.txt")
 
     # idenfity all of these text files
-    jsonFiles = glob(os.path.abspath('./output*.json'))
+    jsonFiles = glob(f'{working_dir}/output*.json')
 
     # sort the found files so that they are in decensing order by series_number
     # this is probably unnecssary
@@ -177,23 +177,27 @@ def generate_tagger_config(dicom_dir):
                         continue                    
 
     # write tagger data to a yaml file. used by the xnattagger package for uploading tags to XNAT. See github.com/harvard-nrg/xnattager
-    with open('tagger.yaml', 'a') as file:
+    with open(f'{working_dir}/tagger.yaml', 'a') as file:
         yaml.dump(tagger_data, file)
 
-def update_xnat_tags(MRsession):
+def update_xnat_tags(MRsession, working_dir):
 
-    # make sure an xnat authentication files has already been created. See YXAIL documentation.
+    # make sure an xnat authentication files has already been created. See YAXIL documentation.
     assert os.path.exists(os.path.expanduser('~/.xnat_auth')), 'xnat authentication needs to be run'
 
     # run the command
-    os.system(f'xnat_tagger.py --label {MRsession} --target-modality all --xnat-alias xnat --config tagger.yaml')
+    os.system(f'xnat_tagger.py --label {MRsession} --target-modality all --xnat-alias xnat --config {working_dir}/tagger.yaml')
 
-def tag_scans(dicom_dir, MRsession, dryrun):
+def tag_scans(dicom_dir, MRsession, working_dir, dryrun):
     
+    this_session_working_dir = os.path.join(working_dir, 'xnattager', MRsession)
+
+    os.mkdir(this_session_working_dir)
+
     # generate the xnattag config file
-    generate_tagger_config(dicom_dir)
+    generate_tagger_config(dicom_dir, this_session_working_dir)
     
     # update the xnat tags
     if not dryrun:
-        update_xnat_tags(MRsession)
+        update_xnat_tags(MRsession, this_session_working_dir)
 

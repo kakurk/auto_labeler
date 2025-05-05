@@ -172,7 +172,7 @@ for dt in "${insert_date[@]}"; do
         echo ""
         echo "Tagging scans for Session ${label[$c]}..."
         echo ""
-        xnatqa --dicom_dir $path_to_scans --experiment ${label[$c]} --dryrun
+        xnatqa --dicom_dir $path_to_scans --experiment ${label[$c]} --working_dir /tmp --dryrun
 
         # launch jobs on the SCC for the QA reports.
         # launches 1 job for each tagged scan in this session.
