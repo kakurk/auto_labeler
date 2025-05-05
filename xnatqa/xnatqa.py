@@ -11,7 +11,7 @@ def main():
     parser.add_argument("--dryrun", default = "", action='store_true', help="Run in dry run mode: No upload to XNAT")
 
     args, unknown_args = parser.parse_known_args()
-    dicom_dir  = os.path.join(args.dicom_dir, 'SCANS')
+    dicom_dir  = os.path.join(args.dicom_dir)
     experiment = args.experiment
     dryrun     = args.dryrun
 
