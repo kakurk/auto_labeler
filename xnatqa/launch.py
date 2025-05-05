@@ -12,9 +12,11 @@ def main():
     # parse input arguments
     parser = argparse.ArgumentParser(description="XNAT QA Workflow")
     parser.add_argument("--experiment", default = "", required=True)
+    parser.add_argument("--dryrun", default = "", action='store_true', help="Run in dry run mode: No launching of jobs")
 
     args, unknown_args = parser.parse_known_args()
     MRsession = args.experiment
+    dryrun    = args.dryrun
 
     # authenticate with xnat using the ~/.xnat_auth file created earlier in the workflow
     auth = yaxil.auth(alias = 'xnat')
@@ -33,12 +35,16 @@ def main():
 
             # if that note has a "#BOLD" tag...
             if '#BOLD' in note:
-                print('Run BOLDQC')
-                os.system(f'qsub -P cncxnat boldqc.qsub {MRsession} {b}')
+                print('Run BOLDQC:')
+                print(f'qsub -P cncxnat boldqc.qsub {MRsession} {b}')
+                if not dryrun:
+                    os.system(f'qsub -P cncxnat boldqc.qsub {MRsession} {b}')
                 b+=1
 
             # if that note has a "#T1w" tag...
             if '#T1w' in note:
-                print('Run ANATQC')
-                os.system(f'qsub -P cncxnat anatqc.qsub {MRsession} {a}')
+                print('Run ANATQC:')
+                print(f'qsub -P cncxnat anatqc.qsub {MRsession} {a}')
+                if not dryrun:
+                    os.system(f'qsub -P cncxnat anatqc.qsub {MRsession} {a}')
                 a+=1

@@ -188,11 +188,12 @@ def update_xnat_tags(MRsession):
     # run the command
     os.system(f'xnat_tagger.py --label {MRsession} --target-modality all --xnat-alias xnat --config tagger.yaml')
 
-def tag_scans(dicom_dir, MRsession):
+def tag_scans(dicom_dir, MRsession, dryrun):
     
     # generate the xnattag config file
     generate_tagger_config(dicom_dir)
     
     # update the xnat tags
-    update_xnat_tags(MRsession)
+    if not dryrun:
+        update_xnat_tags(MRsession)
 

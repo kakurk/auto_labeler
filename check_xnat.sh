@@ -146,13 +146,13 @@ for dt in "${insert_date[@]}"; do
         echo ""
         echo "Tagging scans for Session ${label[$c]}..."
         echo ""
-        xnatqa --dicom_dir $path_to_scans --experiment ${label[$c]}
+        xnatqa --dicom_dir $path_to_scans --experiment ${label[$c]} --dryrun
 
         # launch jobs on the SCC for the QA reports.
         # launches 1 job for each tagged scan in this session.
         # BOLDQC jobs take < 1hr
         # ANATQC jobs take ~3-4 hrs
-        launch --experiment ${label[$c]}
+        launch --experiment ${label[$c]} --dryrun
 
     else
         echo ""
