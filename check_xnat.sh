@@ -136,16 +136,16 @@ for dt in "${insert_date[@]}"; do
         path_to_scans=/data/xnat/archive/${projects[$c]}/arc001/${label[$c]}/SCANS/
         
         # make sure "path_to_scans" exists. Throw an error if it does not.
-        if [! -d $path_to_scans ]; then
+        if [ ! -d $path_to_scans ]; then
             echo "Scans directory does not exist for project: ${projects[$c]} session: ${label[$c]}" >&2
             echo $path_to_scans >&2
-            return 1
+            exit 1
         fi
 
         # check yaxil authentication
-        if [! -d ~/xnat_auth]; then
+        if [ ! -f ~/.xnat_auth ]; then
             echo "Need to run yaxil XNAT authentication for this user" >&2
-            return 1
+            exit 1
         fi
 
         # run the labeling process
