@@ -4,6 +4,9 @@
 # Checks for newly created scan sessions on an XNAT instance
 
 # Configuration
+#  Before running this script, the user MUST create the following enviromental variables:
+#  export XNAT_USER=username
+#  export XNAT_PASS=password
 XNAT_HOST="https://xnat2.bu.edu"
 PROJECT_ID=""  # Leave empty to check all accessible projects
 CHECK_INTERVAL=3600  # Time between checks in seconds (default: 1 hour)
