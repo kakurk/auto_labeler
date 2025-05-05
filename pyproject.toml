@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [project.scripts]
-xnatqa = "xnatqa.xnatqa:main"
+xnatqa = "xnatqa.tag:main"
 launch = "xnatqa.launch:main"
 
 [project.urls]
