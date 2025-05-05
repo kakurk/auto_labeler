@@ -12,6 +12,26 @@ PROJECT_ID=""  # Leave empty to check all accessible projects
 CHECK_INTERVAL=3600  # Time between checks in seconds (default: 1 hour)
 STATE_FILE="$HOME/.xnat_last_checked"  # File to store last check timestamp
 
+# source the python virtual enviorment
+VENV_PATH="/home/kkurkela/venvs/xnatqa"
+source "$VENV_PATH/bin/activate"
+
+# add dcm2niix to the PATH
+if ! command -v dcm2niix &> /dev/null; then
+    echo "dcm2niix is not on the PATH"
+    DCM2NIIX_BIN=/home/kkurkela/dcm2niix
+    echo "Adding $DCM2NIIX_BIN to the PATH..."
+    export PATH=$PATH:$DCM2NIIX_BIN
+fi
+
+# make sure dcm2niix is the proper version:
+DCM2NIIX_VERSION=$(dcm2niix -v | tail -n 1)
+if [ ! $DCM2NIIX_VERSION = "v1.0.20241211" ]; then
+    echo "Incorrect dcm2niix version detected. This routine requires version v1.0.20241211"
+    echo "Detected version: $DCM2NIIX_VERSION"
+    exit 1
+fi
+
 # Function to authenticate and get JSESSIONID
 authenticate() {
     SESSION_ID=$(curl -s -k -u "$XNAT_USER:$XNAT_PASS" -X POST "$XNAT_HOST/data/JSESSION" | tr -d '"')
@@ -182,3 +202,6 @@ curl -s -k -b "JSESSIONID=$JSESSION" "$XNAT_HOST/data/JSESSION" -X DELETE > /dev
 
 # confirm check complete
 echo "Check complete. Next check in $CHECK_INTERVAL seconds."
+
+# deactivate the python virtual enviroment
+deactivate
