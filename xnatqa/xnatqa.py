@@ -15,10 +15,6 @@ def main():
     experiment = args.experiment
     dryrun     = args.dryrun
 
-    # run xnat authentication for this container. writes an ~/.xnat_auth file to the home directory
-    # this file is used in all subsequent calls to XNAT
-    os.system(f'xnat_auth --alias xnat --url $XNAT_HOST --username $XNAT_USER --password $XNAT_PASS')
-
     # tag all scans in this session
     tag_scans(dicom_dir, experiment, dryrun)
 

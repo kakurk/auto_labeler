@@ -18,7 +18,10 @@ def main():
     MRsession = args.experiment
     dryrun    = args.dryrun
 
-    # authenticate with xnat using the ~/.xnat_auth file created earlier in the workflow
+    # make sure an xnat authentication files has already been created. See YXAIL documentation.
+    assert os.path.exists(os.path.expanduser('~/.xnat_auth')), 'xnat authentication needs to be run'
+
+    # authenticate with xnat using the ~/.xnat_auth file
     auth = yaxil.auth(alias = 'xnat')
 
     # open and automatically close a connection to XNAT using the auth

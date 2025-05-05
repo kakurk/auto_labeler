@@ -142,6 +142,12 @@ for dt in "${insert_date[@]}"; do
             return 1
         fi
 
+        # check yaxil authentication
+        if [! -d ~/xnat_auth]; then
+            echo "Need to run yaxil XNAT authentication for this user" >&2
+            return 1
+        fi
+
         # run the labeling process
         echo ""
         echo "Tagging scans for Session ${label[$c]}..."
