@@ -3,6 +3,7 @@ import yaml
 from glob import glob
 import re
 import xnatqa
+import shutil
 
 def extract_bids_suffix(bids_string):
         # Extract the BIDS suffix from a BIDS formatted string
@@ -190,9 +191,11 @@ def update_xnat_tags(MRsession, working_dir):
 
 def tag_scans(dicom_dir, MRsession, working_dir, dryrun):
     
+    # create a working directory to write temporary files
     this_session_working_dir = os.path.join(working_dir, 'xnattager', MRsession)
-
-    os.mkdir(this_session_working_dir)
+    if os.path.isdir(this_session_working_dir):
+        shutil.rmtree(this_session_working_dir)
+    os.makedirs(this_session_working_dir)
 
     # generate the xnattag config file
     generate_tagger_config(dicom_dir, this_session_working_dir)
