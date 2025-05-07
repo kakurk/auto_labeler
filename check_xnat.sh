@@ -16,7 +16,7 @@ STATE_FILE="$HOME/.xnat_last_checked"  # File to store last check timestamp
 VENV_PATH="/home/kkurkela/venvs/xnatqa"
 source "$VENV_PATH/bin/activate"
 
-# add dcm2niix to the PATH
+# add dcm2niix to the PATH if it is not already there
 if ! command -v dcm2niix &> /dev/null; then
     echo "dcm2niix is not on the PATH"
     DCM2NIIX_BIN=/home/kkurkela/dcm2niix
@@ -32,7 +32,7 @@ if [ ! $DCM2NIIX_VERSION = "v1.0.20241211" ]; then
     exit 1
 fi
 
-# Function to authenticate and get JSESSIONID
+# Function to authenticate with XNAT and get JSESSIONID
 authenticate() {
     SESSION_ID=$(curl -s -k -u "$XNAT_USER:$XNAT_PASS" -X POST "$XNAT_HOST/data/JSESSION" | tr -d '"')
     echo "$SESSION_ID"
@@ -172,7 +172,7 @@ for dt in "${insert_date[@]}"; do
         echo ""
         echo "Tagging scans for Session ${label[$c]}..."
         echo ""
-        tag --dicom_dir $path_to_scans --experiment ${label[$c]} --working_dir /tmp --dryrun
+        tagger --dicom_dir $path_to_scans --experiment ${label[$c]} --working_dir /tmp --dryrun
 
         # launch jobs on the SCC for the QA reports.
         # launches 1 job for each tagged scan in this session.
