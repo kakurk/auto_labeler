@@ -1,6 +1,6 @@
 [project]
 name = "xnatqa"
-version = "0.0.16"
+version = "0.0.22"
 authors = [
   { name="Kyle Kurkela", email="kkurkela@bu.edu" },
 ]
@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [project.scripts]
-xnatqa = "xnatqa.tag:main"
+tagger = "xnatqa.tagger:main"
 launch = "xnatqa.launch:main"
 
 [project.urls]
