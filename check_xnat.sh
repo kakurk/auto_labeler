@@ -63,7 +63,7 @@ get_todays_sessions() {
     local jsession="$1"
     local today=$(todays_date)
     local tomorrow=$(tomorrows_date)
-    
+
     # Build the API URL, appending the project id and todays date as necessary
     local api_url="$XNAT_HOST/data/experiments"
     if [ -n "$PROJECT_ID" ]; then
@@ -72,10 +72,10 @@ get_todays_sessions() {
     else
         api_url="$api_url?columns=project,insert_date,label&insert_date=$today-$tomorrow"
     fi
-    
+
     # Get the sessions
     RAW_RESPONSE=$(curl -s -k -b "JSESSIONID=$jsession" -H "Accept: application/json" "$api_url")
- 
+
     # Check if response is HTML. This indicates some sort of error has occured. If its not html, return the raw json response
     if is_html_response $RAW_RESPONSE; then
         echo "ERROR: Received HTML response instead of JSON data" >&2
@@ -138,9 +138,9 @@ for dt in "${insert_date[@]}"; do
 
     # Convert current datetime to seconds since epoch
     dt_sec=$(date -d "$dt" +%s)
-    
-    # Determine if this insert time is between START and END
-    if (( dt_sec >= start_sec && dt_sec <= end_sec )); then
+
+    # Determine if this insert time is between START and END. Exclude the QA project.
+    if (( dt_sec >= start_sec && dt_sec <= end_sec )) && [[ "$project" != "qa" ]]; then
 
         echo ""
         echo "Session: ${label[$c]} inserted at $dt is WITHIN the range"
@@ -154,7 +154,7 @@ for dt in "${insert_date[@]}"; do
         # where %PROJECT% and %SESSION% are the project and session labels respectively
         # for example: /data/xnat/archive/burcs/arc001/test001_MR_1/SCANS/
         path_to_scans=/data/xnat/archive/${projects[$c]}/arc001/${label[$c]}/SCANS/
-        
+
         # make sure "path_to_scans" exists. Throw an error if it does not.
         if [ ! -d $path_to_scans ]; then
             echo "Scans directory does not exist for project: ${projects[$c]} session: ${label[$c]}" >&2
