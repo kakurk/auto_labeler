@@ -4,3 +4,4 @@ venvs/
 dist/
 xnatqa.egg-info/
 .auth
+tests/

@@ -28,6 +28,10 @@ launch = "xnatqa.launch:main"
 Homepage = "https://github.com/kakurk/auto_labeler"
 Issues = "https://github.com/kakurk/auto_labeler/issues"
 
+
+[tool.setuptools.packages.find]
+exclude = ["tests*"]
+
 [build-system]
 requires = ["setuptools >= 77.0.3"]
 build-backend = "setuptools.build_meta"
