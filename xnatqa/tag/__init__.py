@@ -26,6 +26,8 @@ def generate_tagger_config(dicom_dir, working_dir):
     # call to dcm2niix. generates a bunch of *.json text files in the current working directory.
     os.system(f"dcm2niix -s y -a y -b o -o {working_dir} -f 'output_%s_%d' -w 0 -m 1 -i y {dicom_dir} &>>{working_dir}/log.txt")
 
+def generate_tagger_yaml(working_dir):
+
     # idenfity all of these text files
     jsonFiles = glob(f'{working_dir}/output*.json')
 
@@ -34,7 +36,7 @@ def generate_tagger_config(dicom_dir, working_dir):
     jsonFiles.sort(key=lambda f: int(re.search('(?<=output_)\d+(?=_)', f).group()))
 
     # initialize a dictionary to hold xnattager data
-    tagger_data = dict(t1 = [], t1_move = [], t2 = [], t2_move = [], bold = [])
+    tagger_data = dict(t1w = [], t1w_move = [], t2w = [], t2w_move = [], bold = [])
 
     # looping over the json sidecar files...
     for f in jsonFiles:
@@ -46,12 +48,13 @@ def generate_tagger_config(dicom_dir, working_dir):
         series_description = json_data['SeriesDescription']
         series_number = json_data['SeriesNumber']
         image_type = json_data['ImageType']
-        # remove the last element of the image_type list
+        # remove the last element of the image_type list. For whatever reason
         del image_type[-1]
-        bids_guess = json_data['BidsGuess']
 
         # if there is a BidsGuess field...
         if 'BidsGuess' in json_data.keys():
+
+            bids_guess = json_data['BidsGuess']
 
             # if that guess was "func"
             if bids_guess[0] == 'func':
@@ -63,15 +66,15 @@ def generate_tagger_config(dicom_dir, working_dir):
                 if bids_suffix == 'bold':
 
                     # there are a couple of common problems with the BidsGuess feature. One is that it does NOT properly identify "SBREF" scans. Make sure this is not an "SBREF" scan. Here I search for the keyword "SBREF" to be somewhere within the study description name.
-                    sbref_keywords = ['sbref']
+                    sbref_keywords = ['sbref', 'localizer']
 
                     if any(kw in series_description.lower() for kw in sbref_keywords):
 
                         print()
-                        print(f'Series Number: {series_number}')    
+                        print(f'Series Number: {series_number}')
                         print(f'Series Description: {series_description}')
                         print(f"Bids Guess: {json_data['BidsGuess']}")
-                        print('Is an SBREF scan. Ignoring...')
+                        print('Is an SBREF | Localizer scan. Ignoring...')
                         print()
                         continue
 
@@ -81,36 +84,40 @@ def generate_tagger_config(dicom_dir, working_dir):
                     if any(kw in series_description.lower() for kw in exclude_keywords):
 
                         print()
-                        print(f'Series Number: {series_number}')    
+                        print(f'Series Number: {series_number}')
                         print(f'Series Description: {series_description}')
                         print(f"Bids Guess: {bids_guess}")
                         print('Relableing to T1...')
                         print()
 
-                        tagger_data['t1'].append({'series_description': series_description, 'image_type': image_type, 'tag': '#T1w'})
+                        tagger_data['t1w'].append({'series_description': series_description, 'image_type': image_type, 'tag': '#T1w'})
                         continue
 
                     exclude_keywords = ['t2']
                     if any(kw in series_description.lower() for kw in exclude_keywords):
 
                         print()
-                        print(f'Series Number: {series_number}')    
+                        print(f'Series Number: {series_number}')
                         print(f'Series Description: {series_description}')
                         print(f'Bids Guess: {bids_guess}')
                         print('Relableing to T2...')
                         print()
 
-                        tagger_data['t2'].append({'series_description': series_description, 'image_type': image_type, 'tag': '#T2w'})
+                        #tagger_data['t2w'].append({'series_description': series_description, 'image_type': image_type, 'tag': '#T2w'})
                         continue
 
                     print()
-                    print(f'Series Number: {series_number}')    
+                    print(f'Series Number: {series_number}')
                     print(f'Series Description: {series_description}')
                     print(f'Bids Guess: {bids_guess}')
                     print('Labeling as BOLD...')
                     print()
 
-                    tagger_data['bold'].append({'series_description': series_description, 'image_type': image_type, 'tag': '#BOLD'})
+                    entry = {'series_description': series_description, 'image_type': image_type, 'tag': '#BOLD'}
+
+                    if entry not in tagger_data['bold']:
+                        tagger_data['bold'].append({'series_description': series_description, 'image_type': image_type, 'tag': '#BOLD'})
+
                     continue
 
             # if the BidsGuess was "anat"...
@@ -130,56 +137,56 @@ def generate_tagger_config(dicom_dir, working_dir):
                         # this is a T1w VNAV setter scan.
 
                         print()
-                        print(f'Series Number: {series_number}')    
+                        print(f'Series Number: {series_number}')
                         print(f'Series Description: {series_description}')
                         print(f"Bids Guess: {bids_guess}")
                         print('Labeling as T1w_move...')
                         print()
-                        
-                        tagger_data['t1_move'].append({'series_description': series_description, 'image_type': image_type, 'tag': '#T1w_MOVE'})
+
+                        #tagger_data['t1w_move'].append({'series_description': series_description, 'image_type': image_type, 'tag': '#T1w_MOVE'})
                         continue
 
                     elif not NonlinearGradientCorrection and 'NumberOfAverages' in json_data:
-                        
+
                         # this is a T1w scan
 
                         print()
-                        print(f'Series Number: {series_number}')    
+                        print(f'Series Number: {series_number}')
                         print(f'Series Description: {series_description}')
                         print(f"Bids Guess: {bids_guess}")
                         print('Labeling as T1w...')
                         print()
-                        
-                        tagger_data['t1'].append({'series_description': series_description, 'image_type': image_type, 'tag': '#T1w'})
+
+                        tagger_data['t1w'].append({'series_description': series_description, 'image_type': image_type, 'tag': '#T1w'})
                         continue
 
                 elif bids_suffix == 'T2w':
 
                     if json_data['SliceThickness'] == 8:
-                        
+
                         # this is a T2w VNAV setter scan
                         print()
-                        print(f'Series Number: {series_number}')    
+                        print(f'Series Number: {series_number}')
                         print(f'Series Description: {series_description}')
                         print(f"Bids Guess: {bids_guess}")
                         print('Labeling as T2w_move...')
                         print()
 
-                        tagger_data['t2_move'].append({'series_description': series_description, 'image_type': image_type, 'tag': '#T2w_move'})
+                        #tagger_data['t2w_move'].append({'series_description': series_description, 'image_type': image_type, 'tag': '#T2w_move'})
                         continue
 
                     else:
 
                         # this is a T2w scan
                         print()
-                        print(f'Series Number: {series_number}')    
+                        print(f'Series Number: {series_number}')
                         print(f'Series Description: {series_description}')
                         print(f"Bids Guess: {bids_guess}")
-                        print('Labeling as T2w...')                        
+                        print('Labeling as T2w...')
                         print()
 
-                        tagger_data['t2'].append({'series_description': series_description, 'image_type': image_type, 'tag': '#T2w'})
-                        continue                    
+                        #tagger_data['t2w'].append({'series_description': series_description, 'image_type': image_type, 'tag': '#T2w'})
+                        continue
 
     # write tagger data to a yaml file. used by the xnattagger package for uploading tags to XNAT. See github.com/harvard-nrg/xnattager
     with open(f'{working_dir}/tagger.yaml', 'a') as file:
@@ -192,19 +199,3 @@ def update_xnat_tags(MRsession, working_dir):
 
     # run the command
     os.system(f'xnat_tagger.py --label {MRsession} --target-modality all --xnat-alias xnat --config {working_dir}/tagger.yaml')
-
-def tag_scans(dicom_dir, MRsession, working_dir, dryrun):
-    
-    # create a working directory to write temporary files
-    this_session_working_dir = os.path.join(working_dir, 'xnattager', MRsession)
-    if os.path.isdir(this_session_working_dir):
-        shutil.rmtree(this_session_working_dir)
-    os.makedirs(this_session_working_dir)
-
-    # generate the xnattag config file
-    generate_tagger_config(dicom_dir, this_session_working_dir)
-    
-    # update the xnat tags
-    if not dryrun:
-        update_xnat_tags(MRsession, this_session_working_dir)
-
