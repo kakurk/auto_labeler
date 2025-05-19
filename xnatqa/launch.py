@@ -1,6 +1,7 @@
 import os
 import yaxil
 import argparse
+import re
 
 def main():
     # So, at this point, everything has been labeled for this session.
@@ -27,27 +28,41 @@ def main():
     # open and automatically close a connection to XNAT using the auth
     with yaxil.session(auth) as sess:
         # keep track of the number of BOLD (b) and ANAT (a) scans idenfified
-        b = 0
-        a = 0
 
         # for each scan in this session...
         for scan in sess.scans(label=MRsession):
 
             # this scan's note
             note = scan['note']
+            id = scan['ID']
+            type = scan['type']
+            SeriesDesc = scan['series_description']
+            quality = scan['quality']
 
             # if that note has a "#BOLD" tag...
             if '#BOLD' in note:
+
+                run = re.search('[0-9]{3}', note)
+                run = int(run.group())
+
+                print('')
                 print('Run BOLDQC:')
-                print(f'qsub -P cncxnat boldqc.qsub {MRsession} {b}')
+                print(f'{id}\t{type}\t{SeriesDesc}\t{quality}\t{note}')
+                print(f'qsub -P drkrcs boldqc.qsub {MRsession} {run}')
+                print('')
                 if not dryrun:
-                    os.system(f'qsub -P cncxnat boldqc.qsub {MRsession} {b}')
-                b+=1
+                    os.system(f'qsub -P drkrcs boldqc.qsub {MRsession} {run}')
 
             # if that note has a "#T1w" tag...
             if '#T1w' in note:
+
+                run = re.search('[0-9]{3}', note)
+                run = int(run.group())
+
+                print('')
                 print('Run ANATQC:')
-                print(f'qsub -P cncxnat anatqc.qsub {MRsession} {a}')
+                print(f'{id}\t{type}\t{SeriesDesc}\t{quality}\t{note}')             
+                print(f'qsub -P drkrcs anatqc.qsub {MRsession} {run}')
+                print('')
                 if not dryrun:
-                    os.system(f'qsub -P cncxnat anatqc.qsub {MRsession} {a}')
-                a+=1
+                    os.system(f'qsub -P drkrcs anatqc.qsub {MRsession} {run}')
