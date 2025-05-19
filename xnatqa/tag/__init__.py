@@ -66,7 +66,7 @@ def generate_tagger_yaml(working_dir):
                 if bids_suffix == 'bold':
 
                     # there are a couple of common problems with the BidsGuess feature. One is that it does NOT properly identify "SBREF" scans. Make sure this is not an "SBREF" scan. Here I search for the keyword "SBREF" to be somewhere within the study description name.
-                    sbref_keywords = ['sbref', 'localizer']
+                    sbref_keywords = ['sbref'] # 'localizer'
 
                     if any(kw in series_description.lower() for kw in sbref_keywords):
 
@@ -74,7 +74,7 @@ def generate_tagger_yaml(working_dir):
                         print(f'Series Number: {series_number}')
                         print(f'Series Description: {series_description}')
                         print(f"Bids Guess: {json_data['BidsGuess']}")
-                        print('Is an SBREF | Localizer scan. Ignoring...')
+                        print('Is an SBREF scan. Ignoring...')
                         print()
                         continue
 
