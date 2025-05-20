@@ -11,10 +11,12 @@
 # force shell to exit immediately if any of the commands exits with a non-zero status 
 set -e
 
+# change the home directory.
 QAHOME=/home/xnat/qa
 OGHOME=$HOME
 export HOME=$QAHOME
-XNAT_HOST="https://xnat2.bu.edu"
+
+XNAT_HOST="https://xnat2.bu.edu" # xnat url
 PROJECT_ID=""  # Leave empty to check all accessible projects
 CHECK_INTERVAL=3600  # Time between checks in seconds (default: 1 hour)
 STATE_FILE="$HOME/.xnat_last_checked"  # File to store last check timestamp
@@ -114,7 +116,7 @@ echo "Last checked: ${LAST_CHECKED:-"Never"}"
 # Authenticate to XNAT
 JSESSION=$(authenticate)
 if [ -z "$JSESSION" ]; then
-    echo "ERROR: Authentication failed"
+    echo "ERROR: Authentication failed" &>2
     exit 1
 fi
 
