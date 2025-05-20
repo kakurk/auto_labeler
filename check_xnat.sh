@@ -7,28 +7,33 @@
 #  Before running this script, the user MUST create the following enviromental variables:
 #  export XNAT_USER=username
 #  export XNAT_PASS=password
+
+# force shell to exit immediately if any of the commands exits with a non-zero status 
+set -e
+
+QAHOME=/home/xnat/qa
+OGHOME=$HOME
+export HOME=$QAHOME
 XNAT_HOST="https://xnat2.bu.edu"
 PROJECT_ID=""  # Leave empty to check all accessible projects
 CHECK_INTERVAL=3600  # Time between checks in seconds (default: 1 hour)
 STATE_FILE="$HOME/.xnat_last_checked"  # File to store last check timestamp
 
 # source the python virtual enviorment
-VENV_PATH="/home/kkurkela/venvs/xnatqa"
+VENV_PATH="$HOME/venvs/xnatqa"
 source "$VENV_PATH/bin/activate"
 
 # add dcm2niix to the PATH if it is not already there
 if ! command -v dcm2niix &> /dev/null; then
-    echo "dcm2niix is not on the PATH"
-    DCM2NIIX_BIN=/home/kkurkela/dcm2niix
-    echo "Adding $DCM2NIIX_BIN to the PATH..."
-    export PATH=$PATH:$DCM2NIIX_BIN
+    echo "dcm2niix is not on the PATH" &>2
+    exit 1
 fi
 
 # make sure dcm2niix is the proper version:
 DCM2NIIX_VERSION=$(dcm2niix -v | tail -n 1)
 if [ ! $DCM2NIIX_VERSION = "v1.0.20241211" ]; then
-    echo "Incorrect dcm2niix version detected. This routine requires version v1.0.20241211"
-    echo "Detected version: $DCM2NIIX_VERSION"
+    echo "Incorrect dcm2niix version detected. This routine requires version v1.0.20241211" &>2
+    echo "Detected version: $DCM2NIIX_VERSION" &>2
     exit 1
 fi
 
@@ -77,11 +82,15 @@ get_todays_sessions() {
     RAW_RESPONSE=$(curl -s -k -b "JSESSIONID=$jsession" -H "Accept: application/json" "$api_url")
 
     # Check if response is HTML. This indicates some sort of error has occured. If its not html, return the raw json response
-    if is_html_response $RAW_RESPONSE; then
+    if is_html_response "$RAW_RESPONSE"; then
+        echo "" >&2
         echo "ERROR: Received HTML response instead of JSON data" >&2
-        echo "Possible authentication failure or invalid endpoint" >&2
-        echo "Response:" >&2
-        echo $RAW_RESPONSE
+        echo "Possible authentication failure" >&2
+        echo "" >&2
+        echo "Response from XNAT:" >&2
+        echo "" >&2
+        echo "$RAW_RESPONSE" >&2
+        echo "" >&2
         return 1
     else
         echo $RAW_RESPONSE
@@ -205,3 +214,6 @@ echo "Check complete. Next check in $CHECK_INTERVAL seconds."
 
 # deactivate the python virtual enviroment
 deactivate
+
+# reset HOME
+export HOME=OGHOME
