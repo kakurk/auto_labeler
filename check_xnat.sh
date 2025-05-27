@@ -21,6 +21,36 @@ PROJECT_ID=""  # Leave empty to check all accessible projects
 CHECK_INTERVAL=3600  # Time between checks in seconds (default: 1 hour)
 STATE_FILE="$HOME/.xnat_last_checked"  # File to store last check timestamp
 
+# Define the path to the credentials file
+CREDENTIALS_FILE="$HOME/.xnat_auth"
+
+# Check if XNAT_USER is set
+if [ -z "$XNAT_USER" ] || [ -z "$XNAT_PASS" ]; then
+
+    echo "XNAT_USER and/or XNAT_PASS not set. Attempting to load from file..."
+
+    # Check if credentials file exists
+    if [ -f "$CREDENTIALS_FILE" ]; then
+
+        # Extract username and password using grep + sed or awk
+        XNAT_USER=$(grep -oP '(?<=<username>).*?(?=</username>)' "$CREDENTIALS_FILE")
+        XNAT_PASS=$(grep -oP '(?<=<password>).*?(?=</password>)' "$CREDENTIALS_FILE")
+
+        # Export the extracted variables
+        export XNAT_USER
+        export XNAT_PASS
+
+        # Re-check to ensure the variables were loaded
+        if [ -z "$XNAT_USER" ] || [ -z "$XNAT_PASS" ]; then
+            echo "Error: Could not read valid XNAT_USER or XNAT_PASS from file."
+            exit 1
+        fi
+    else
+        echo "Error: Credentials file '$CREDENTIALS_FILE' does not exist."
+        exit 1
+    fi
+fi
+
 # source the python virtual enviorment
 VENV_PATH="$HOME/venvs/xnatqa"
 source "$VENV_PATH/bin/activate"
