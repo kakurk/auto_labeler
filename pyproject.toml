@@ -1,6 +1,6 @@
 [project]
 name = "xnatqa"
-version = "0.0.22"
+version = "0.0.23"
 authors = [
   { name="Kyle Kurkela", email="kkurkela@bu.edu" },
 ]

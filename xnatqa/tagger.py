@@ -17,7 +17,7 @@ def main():
     args, unknown_args = parser.parse_known_args()
     dicom_dir   = os.path.join(args.dicom_dir)
     experiment  = args.experiment
-    working_dir = args.working_dir    
+    working_dir = args.working_dir
     dryrun      = args.dryrun
 
     # tag all scans in this session

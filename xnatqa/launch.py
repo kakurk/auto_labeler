@@ -48,10 +48,10 @@ def main():
                 print('')
                 print('Run BOLDQC:')
                 print(f'{id}\t{type}\t{SeriesDesc}\t{quality}\t{note}')
-                print(f'qsub -P drkrcs boldqc.qsub {MRsession} {run}')
+                print(f'qsub -P cncxnat boldqc.qsub {MRsession} {run}')
                 print('')
                 if not dryrun:
-                    os.system(f'qsub -P drkrcs boldqc.qsub {MRsession} {run}')
+                    os.system(f'qsub -P cncxnat boldqc.qsub {MRsession} {run}')
 
             # if that note has a "#T1w" tag...
             if '#T1w' in note:
@@ -61,8 +61,8 @@ def main():
 
                 print('')
                 print('Run ANATQC:')
-                print(f'{id}\t{type}\t{SeriesDesc}\t{quality}\t{note}')             
-                print(f'qsub -P drkrcs anatqc.qsub {MRsession} {run}')
+                print(f'{id}\t{type}\t{SeriesDesc}\t{quality}\t{note}')
+                print(f'qsub -P cncxnat anatqc.qsub {MRsession} {run}')
                 print('')
                 if not dryrun:
-                    os.system(f'qsub -P drkrcs anatqc.qsub {MRsession} {run}')
+                    os.system(f'qsub -P cncxnat anatqc.qsub {MRsession} {run}')

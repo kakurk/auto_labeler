@@ -189,7 +189,7 @@ for dt in "${insert_date[@]}"; do
 
         # code for labeling and launching
 
-        # In order to label, I need the full path to where the scans are store on this machine
+        # In order to label, I need the full path to where the scans are stored on this machine
         # XNAT archives data in the following directory structure:
         # structure: /data/xnat/archive/%PROJECT%/arc001/%SESSION%/SCANS/
         # where %PROJECT% and %SESSION% are the project and session labels respectively
