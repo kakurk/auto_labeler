@@ -146,7 +146,7 @@ def generate_tagger_yaml(working_dir):
                         #tagger_data['t1w_move'].append({'series_description': series_description, 'image_type': image_type, 'tag': '#T1w_MOVE'})
                         continue
 
-                    elif not NonlinearGradientCorrection and 'NumberOfAverages' in json_data:
+                    elif NonlinearGradientCorrection and 'NumberOfAverages' in json_data:
 
                         # this is a T1w scan
 
