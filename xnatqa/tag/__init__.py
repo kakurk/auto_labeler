@@ -24,7 +24,7 @@ def generate_tagger_config(dicom_dir, working_dir):
         raise FileNotFoundError(f'dcm2niix not found on PATH')
 
     # call to dcm2niix. generates a bunch of *.json text files in the current working directory.
-    os.system(f"dcm2niix -s y -a y -b o -o {working_dir} -f 'output_%s_%d' -w 0 -m 1 -i y {dicom_dir} &>>{working_dir}/log.txt")
+    os.system(f"dcm2niix -s y -a y -b o -o {working_dir} -f 'output_%s_%d' -w 0 -m 0 -i y {dicom_dir} &>>{working_dir}/log.txt")
 
 def generate_tagger_yaml(working_dir):
 
